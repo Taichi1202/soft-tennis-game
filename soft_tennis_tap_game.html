@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>SOFT TENNIS BATTLE</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#08131b;color:white;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;touch-action:none}
+#app{height:100dvh;display:flex;flex-direction:column}
+header{height:62px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;background:#101e28}
+.logo{font-weight:900;letter-spacing:.5px}.score{font-size:25px;font-weight:900}
+#court{position:relative;flex:1;margin:7px;border:4px solid white;border-radius:18px;overflow:hidden;background:#4b9d61;box-shadow:inset 0 0 35px #164625}
+#court:before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,#fff0 0 48px,#fff2 49px 50px);opacity:.3}
+.line{position:absolute;background:white;z-index:2}.sidL{left:10%;top:0;bottom:0;width:3px}.sidR{right:10%;top:0;bottom:0;width:3px}
+.baseT{top:11%;left:10%;right:10%;height:3px}.baseB{bottom:11%;left:10%;right:10%;height:3px}
+.center{left:50%;top:0;bottom:0;width:3px;transform:translateX(-50%);opacity:.55}
+#net{position:absolute;z-index:7;top:49%;left:0;right:0;height:12px;background:repeating-linear-gradient(90deg,#333 0 8px,#eee 8px 10px);border-top:2px solid #fff;border-bottom:2px solid #fff}
+.p{position:absolute;z-index:8;width:43px;height:43px;border-radius:50%;display:grid;place-items:center;font-size:24px;box-shadow:0 4px 10px #0005;transition:.18s}
+#you{left:50%;bottom:14%;transform:translateX(-50%);background:#1976d2}#cpu{left:50%;top:14%;transform:translateX(-50%);background:#c0394a}
+#ball{position:absolute;z-index:12;width:18px;height:18px;border-radius:50%;background:#f5f5df;border:2px solid #777;display:none;box-shadow:0 2px 5px #0008}
+#banner{position:absolute;z-index:20;top:44%;left:50%;transform:translate(-50%,-50%);background:#061018dd;padding:11px 20px;border-radius:18px;font-weight:900;text-align:center;min-width:220px}
+#controls{height:145px;padding:9px;display:grid;grid-template-columns:1fr 1.45fr 1fr;grid-template-rows:1fr 1fr;gap:8px;background:#0d1820}
+button{border:0;border-radius:15px;background:#203746;color:white;font-size:17px;font-weight:900}
+button:active{transform:scale(.96);filter:brightness(1.2)}
+#hit{grid-row:1/3;background:#e88922;font-size:22px}
+#smash{background:#b62d35}.active{outline:3px solid #ffd34d}
+#start{position:absolute;z-index:30;inset:0;background:#07121aeF;display:flex;align-items:center;justify-content:center;padding:25px}
+.panel{width:min(92%,380px);background:#142633;border-radius:24px;padding:25px;text-align:center;box-shadow:0 15px 50px #0009}
+.panel h1{font-size:29px;margin:0 0 8px}.panel p{opacity:.85;line-height:1.5}
+#go{width:100%;height:58px;background:#198754;font-size:20px;margin-top:12px}
+.tip{font-size:13px;opacity:.7;margin-top:12px}
+</style>
+</head>
+<body>
+<div id="app">
+<header><div class="logo">🎾 SOFT TENNIS</div><div class="score" id="score">0 - 0</div></header>
+<div id="court">
+ <div class="line sidL"></div><div class="line sidR"></div><div class="line baseT"></div><div class="line baseB"></div><div class="line center"></div><div id="net"></div>
+ <div id="you" class="p">🧑</div><div id="cpu" class="p">🤖</div><div id="ball"></div><div id="banner">スタートを押そう！</div>
+ <div id="start"><div class="panel"><h1>🎾 ソフトテニス</h1><p>サーブして、コースを選びながらラリー！<br>チャンスが来たらスマッシュ！</p><button id="go">試合開始</button><div class="tip">スマホ向けタップ操作</div></div></div>
+</div>
+<div id="controls">
+ <button id="left">⬅️ 左コース</button>
+ <button id="hit">🎾 打つ！</button>
+ <button id="right">右コース ➡️</button>
+ <button id="smash">💥 スマッシュ</button>
+</div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+let ps=0,cs=0,mode="serve",course="center",rally=0,smashReady=false,busy=false,serveByYou=true;
+function score(){ $("score").textContent=ps+" - "+cs }
+function banner(t){$("banner").textContent=t}
+function ball(x,y){$("ball").style.display="block";$("ball").style.left=x+"%";$("ball").style.top=y+"%"}
+function hideBall(){$("ball").style.display="none"}
+function start(){ $("start").style.display="none";ps=cs=0;score();serveByYou=true;nextPoint() }
+function nextPoint(){if(ps>=4||cs>=4){banner(ps>cs?"🏆 ゲーム勝利！":"💀 ゲーム負け…");setTimeout(()=>{$("start").style.display="flex";$("go").textContent="もう一度プレイ"},700);return}
+mode="serve";rally=0;smashReady=false;busy=false;banner(serveByYou?"サーブ！「打つ！」":"CPUサーブ。返球！");hideBall()}
+function choose(c){course=c;banner(c==="left"?"⬅️ 左コース":c==="right"?"➡️ 右コース":"中央コース")}
+function point(w){hideBall();busy=false;if(w==="you"){ps++;banner("🔥 ポイント！")}else{cs++;banner("😵 ミス！CPUポイント")}score();serveByYou=w!=="you";setTimeout(nextPoint,850)}
+function hit(){
+ if(busy)return;
+ if(mode==="serve"&&serveByYou){busy=true;mode="rally";rally=0;ball(course==="left"?28:course==="right"?72:50,70);banner("サーブ！CPUがレシーブ…");setTimeout(cpuReturn,550);return}
+ if(mode==="serve"&&!serveByYou){busy=true;mode="rally";ball(50,27);banner("CPUサーブ！打ち返せ！");setTimeout(()=>{busy=false;smashReady=true;banner("🔥 チャンス！スマッシュも狙える！")},350);return}
+ if(mode==="rally"){
+   rally++;
+   let chance=Math.random();
+   if(smashReady){smashReady=false; if(chance<.78){point("you")}else{point("cpu")} return}
+   if(chance<.13){point("cpu");return}
+   busy=true;let x=course==="left"?28:course==="right"?72:50;ball(x,48);banner(rally>=3?"🔥 ラリー継続！":"ナイス返球！");
+   setTimeout(cpuReturn,480);
+ }
+}
+function cpuReturn(){
+ if(mode!=="rally")return;
+ if(Math.random()<.16){point("you");return}
+ rally++;let x=25+Math.random()*50;ball(x,25);busy=false;
+ if(rally>=2&&Math.random()<.55){smashReady=true;banner("💥 スマッシュチャンス！")}
+ else banner("CPUの返球！コースを選んで打て！");
+}
+function smash(){
+ if(mode!=="rally"||busy)return;
+ if(smashReady){busy=true;banner("💥 強烈スマッシュ！！");setTimeout(()=>{if(Math.random()<.82)point("you");else point("cpu")},300)}
+ else {banner("まだスマッシュのチャンスじゃない！");setTimeout(()=>banner("コースを選んでラリーしよう"),500)}
+}
+$("go").onclick=start;$("hit").onclick=hit;$("smash").onclick=smash;
+$("left").onclick=()=>choose("left");$("right").onclick=()=>choose("right");
+document.addEventListener("keydown",e=>{if(e.code==="Space")hit();if(e.key==="ArrowLeft")choose("left");if(e.key==="ArrowRight")choose("right");if(e.key==="s")smash()});
+</script>
+</body>
+</html>
